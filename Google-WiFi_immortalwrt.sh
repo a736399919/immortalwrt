@@ -8,7 +8,13 @@
 #克隆源码
 #git clone -b gale --single-branch https://github.com/computersforpeace/openwrt openwrt
 git clone -b master --single-branch https://github.com/immortalwrt/immortalwrt openwrt
+
+rm -rf openwrt/target/linux/generic
+svn checkout https://github.com/computersforpeace/openwrt/branches/gale/target/linux/generic openwrt/target/linux/generic
+
 [ -e files ] && mv files openwrt/files
+
+
 cd openwrt
 
 ./scripts/feeds clean
@@ -60,5 +66,6 @@ chmod +x scripts/gen_image_vboot.sh
 cd target/linux/ipq40xx
 wget https://raw.githubusercontent.com/a736399919/immortalwrt/openwrt-18.06/immortalwrt/gale.patch
 patch -p1 < gale.patch
+
 cd ../../../
 touch target/linux/*/Makefile
