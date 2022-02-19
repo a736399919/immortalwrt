@@ -60,4 +60,5 @@ chmod +x scripts/gen_image_vboot.sh
 cd target/linux/ipq40xx
 wget https://raw.githubusercontent.com/a736399919/immortalwrt/openwrt-18.06/immortalwrt/gale.patch
 patch -p1 < gale.patch
+cd ../../../
 touch target/linux/*/Makefile
