@@ -1,5 +1,5 @@
 diff -uNr a/base-files/etc/board.d/02_network b/base-files/etc/board.d/02_network
---- a/base-files/etc/board.d/02_network	2022-02-20 07:52:42.497540000 +0800
+--- a/base-files/etc/board.d/02_network	2022-02-20 21:16:20.782773561 +0800
 +++ b/base-files/etc/board.d/02_network	2022-02-20 07:58:53.950063744 +0800
 @@ -46,14 +46,11 @@
  	cilab,meshpoint-one|\
@@ -68,7 +68,7 @@ diff -uNr a/base-files/etc/board.d/02_network b/base-files/etc/board.d/02_networ
  
  	[ -n "$lan_mac" ] && ucidef_set_interface_macaddr "lan" $lan_mac
 diff -uNr a/base-files/lib/upgrade/platform.sh b/base-files/lib/upgrade/platform.sh
---- a/base-files/lib/upgrade/platform.sh	2022-02-20 07:52:42.497540000 +0800
+--- a/base-files/lib/upgrade/platform.sh	2022-02-20 21:16:20.898776572 +0800
 +++ b/base-files/lib/upgrade/platform.sh	2022-02-20 07:58:53.954063750 +0800
 @@ -25,29 +25,6 @@
  EOF
@@ -155,7 +155,7 @@ diff -uNr a/base-files/lib/upgrade/platform.sh b/base-files/lib/upgrade/platform
  		nand_do_upgrade "$1"
  		;;
 diff -uNr a/config-5.10 b/config-5.10
---- a/config-5.10	2022-02-20 07:52:42.497540000 +0800
+--- a/config-5.10	2022-02-20 21:16:21.070781036 +0800
 +++ b/config-5.10	2022-02-20 07:58:53.954063750 +0800
 @@ -176,6 +176,11 @@
  CONFIG_GENERIC_STRNLEN_USER=y
@@ -576,7 +576,7 @@ diff -uNr a/files/arch/arm/boot/dts/qcom-ipq4019-wifi.dts b/files/arch/arm/boot/
 +	pinctrl-names = "default";
 +};
 diff -uNr a/image/generic.mk b/image/generic.mk
---- a/image/generic.mk	2022-02-20 07:52:42.529540000 +0800
+--- a/image/generic.mk	2022-02-20 21:16:21.630795569 +0800
 +++ b/image/generic.mk	2022-02-20 07:58:53.954063750 +0800
 @@ -61,6 +61,26 @@
  	cat "$(1)" > "$@"
@@ -645,8 +645,31 @@ diff -uNr a/image/generic.mk b/image/generic.mk
  define Device/zyxel_nbg6617
  	$(call Device/FitImageLzma)
  	DEVICE_VENDOR := ZyXEL
+diff -uNr a/Makefile b/Makefile
+--- a/Makefile	2022-02-20 21:16:20.782773561 +0800
++++ b/Makefile	2022-02-20 21:22:30.772375790 +0800
+@@ -3,7 +3,7 @@
+ ARCH:=arm
+ BOARD:=ipq40xx
+ BOARDNAME:=Qualcomm Atheros IPQ40XX
+-FEATURES:=squashfs fpu ramdisk nand
++FEATURES:=squashfs fpu ramdisk nand boot-part rootfs-part
+ CPU_TYPE:=cortex-a7
+ CPU_SUBTYPE:=neon-vfpv4
+ SUBTARGETS:=generic mikrotik
+@@ -17,8 +17,8 @@
+ DEFAULT_PACKAGES += \
+ 	kmod-usb-dwc3-qcom \
+ 	kmod-leds-gpio kmod-gpio-button-hotplug swconfig \
+-	kmod-ath10k-ct wpad-openssl uboot-envtools \
++	kmod-ath10k-ct wpad-openssl wpad-basic-wolfssl uboot-envtools \
+ 	kmod-usb3 kmod-usb-dwc3 ath10k-firmware-qca4019-ct \
+-	ath10k-board-qca4019 autocore-arm e2fsprogs
++	ath10k-board-qca4019 autocore-arm e2fsprogs uboot-envtools
+ 
+ $(eval $(call BuildTarget))
 diff -uNr a/patches-5.10/901-arm-boot-add-dts-files.patch b/patches-5.10/901-arm-boot-add-dts-files.patch
---- a/patches-5.10/901-arm-boot-add-dts-files.patch	2022-02-20 07:52:42.537540000 +0800
+--- a/patches-5.10/901-arm-boot-add-dts-files.patch	2022-02-20 21:16:21.646795984 +0800
 +++ b/patches-5.10/901-arm-boot-add-dts-files.patch	2022-02-20 07:41:27.468082000 +0800
 @@ -10,7 +10,7 @@
  
