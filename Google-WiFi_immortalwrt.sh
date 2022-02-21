@@ -60,15 +60,15 @@ sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-ksmb
 #sed -i '/exit 0/i\chmod 775 /usr/bin/webd\n' package/default-settings/files/zzz-default-settings
 
 #config
-mv -f ../G-DOCK/Google_gale*.config .config
+mv -f ../G-DOCK/gale_immortalwrt*.config .config
 
 rm -rf package/kernel/mac80211
 rm -rf package/network 
 rm -rf package/system
-svn checkout https://github.com/immortalwrt/luci/trunk/package/kernel/mac80211 package/kernel/mac80211
-svn checkout https://github.com/immortalwrt/luci/trunk/package/kernel/shortcut-fe package/kernel/shortcut-fe
-svn checkout https://github.com/immortalwrt/luci/trunk/package/network package/network 
-svn checkout https://github.com/immortalwrt/luci/trunk/package/system package/system
+svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/kernel/mac80211 package/kernel/mac80211
+svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/kernel/shortcut-fe package/kernel/shortcut-fe
+svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/network package/network 
+svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/system package/system
 
 wget -O target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch
 
