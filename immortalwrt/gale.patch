@@ -1,5 +1,5 @@
 diff -uNr a/base-files/etc/board.d/02_network b/base-files/etc/board.d/02_network
---- a/base-files/etc/board.d/02_network	2022-02-20 21:16:20.782773561 +0800
+--- a/base-files/etc/board.d/02_network	2022-02-21 08:28:55.596692855 +0800
 +++ b/base-files/etc/board.d/02_network	2022-02-20 07:58:53.950063744 +0800
 @@ -46,14 +46,11 @@
  	cilab,meshpoint-one|\
@@ -68,7 +68,7 @@ diff -uNr a/base-files/etc/board.d/02_network b/base-files/etc/board.d/02_networ
  
  	[ -n "$lan_mac" ] && ucidef_set_interface_macaddr "lan" $lan_mac
 diff -uNr a/base-files/lib/upgrade/platform.sh b/base-files/lib/upgrade/platform.sh
---- a/base-files/lib/upgrade/platform.sh	2022-02-20 21:16:20.898776572 +0800
+--- a/base-files/lib/upgrade/platform.sh	2022-02-21 08:28:55.728704309 +0800
 +++ b/base-files/lib/upgrade/platform.sh	2022-02-20 07:58:53.954063750 +0800
 @@ -25,29 +25,6 @@
  EOF
@@ -155,7 +155,7 @@ diff -uNr a/base-files/lib/upgrade/platform.sh b/base-files/lib/upgrade/platform
  		nand_do_upgrade "$1"
  		;;
 diff -uNr a/config-5.10 b/config-5.10
---- a/config-5.10	2022-02-20 21:16:21.070781036 +0800
+--- a/config-5.10	2022-02-21 08:28:55.732704658 +0800
 +++ b/config-5.10	2022-02-20 07:58:53.954063750 +0800
 @@ -176,6 +176,11 @@
  CONFIG_GENERIC_STRNLEN_USER=y
@@ -576,7 +576,7 @@ diff -uNr a/files/arch/arm/boot/dts/qcom-ipq4019-wifi.dts b/files/arch/arm/boot/
 +	pinctrl-names = "default";
 +};
 diff -uNr a/image/generic.mk b/image/generic.mk
---- a/image/generic.mk	2022-02-20 21:16:21.630795569 +0800
+--- a/image/generic.mk	2022-02-21 08:28:55.872716808 +0800
 +++ b/image/generic.mk	2022-02-20 07:58:53.954063750 +0800
 @@ -61,6 +61,26 @@
  	cat "$(1)" > "$@"
@@ -646,7 +646,7 @@ diff -uNr a/image/generic.mk b/image/generic.mk
  	$(call Device/FitImageLzma)
  	DEVICE_VENDOR := ZyXEL
 diff -uNr a/Makefile b/Makefile
---- a/Makefile	2022-02-20 21:16:20.782773561 +0800
+--- a/Makefile	2022-02-21 08:28:55.596692855 +0800
 +++ b/Makefile	2022-02-20 21:22:30.772375790 +0800
 @@ -3,7 +3,7 @@
  ARCH:=arm
@@ -668,8 +668,170 @@ diff -uNr a/Makefile b/Makefile
 +	ath10k-board-qca4019 autocore-arm e2fsprogs uboot-envtools
  
  $(eval $(call BuildTarget))
+diff -uNr a/patches-5.10/420-firmware-qcom-scm-disable-SDI.patch b/patches-5.10/420-firmware-qcom-scm-disable-SDI.patch
+--- a/patches-5.10/420-firmware-qcom-scm-disable-SDI.patch	1970-01-01 08:00:00.000000000 +0800
++++ b/patches-5.10/420-firmware-qcom-scm-disable-SDI.patch	2022-02-20 07:41:27.468082000 +0800
+@@ -0,0 +1,42 @@
++--- a/drivers/firmware/qcom_scm.c
+++++ b/drivers/firmware/qcom_scm.c
++@@ -404,6 +404,20 @@ static int __qcom_scm_set_dload_mode(str
++ 	return qcom_scm_call_atomic(__scm->dev, &desc, NULL);
++ }
++ 
+++static int __qcom_scm_disable_sdi(struct device *dev)
+++{
+++	struct qcom_scm_desc desc = {
+++		.svc = QCOM_SCM_SVC_BOOT,
+++		.cmd = QCOM_SCM_BOOT_CONFIG_SDI,
+++		.arginfo = QCOM_SCM_ARGS(2),
+++		.args[0] = 1  /* 1: disable watchdog debug */,
+++		.args[1] = 0  /* 0: disable SDI */,
+++		.owner = ARM_SMCCC_OWNER_SIP,
+++	};
+++
+++	return qcom_scm_call(__scm->dev, &desc, NULL);
+++}
+++
++ static void qcom_scm_set_download_mode(bool enable)
++ {
++ 	bool avail;
++@@ -1256,6 +1270,8 @@ static int qcom_scm_probe(struct platfor
++ 	if (download_mode)
++ 		qcom_scm_set_download_mode(true);
++ 
+++	__qcom_scm_disable_sdi(__scm->dev);
+++
++ 	return 0;
++ }
++ 
++--- a/drivers/firmware/qcom_scm.h
+++++ b/drivers/firmware/qcom_scm.h
++@@ -77,6 +77,7 @@ extern int scm_legacy_call(struct device
++ #define QCOM_SCM_SVC_BOOT		0x01
++ #define QCOM_SCM_BOOT_SET_ADDR		0x01
++ #define QCOM_SCM_BOOT_TERMINATE_PC	0x02
+++#define QCOM_SCM_BOOT_CONFIG_SDI	0x09
++ #define QCOM_SCM_BOOT_SET_DLOAD_MODE	0x10
++ #define QCOM_SCM_BOOT_SET_REMOTE_STATE	0x0a
++ #define QCOM_SCM_FLUSH_FLAG_MASK	0x3
+diff -uNr a/patches-5.10/421-firmware-qcom-scm-cold-boot-address.patch b/patches-5.10/421-firmware-qcom-scm-cold-boot-address.patch
+--- a/patches-5.10/421-firmware-qcom-scm-cold-boot-address.patch	1970-01-01 08:00:00.000000000 +0800
++++ b/patches-5.10/421-firmware-qcom-scm-cold-boot-address.patch	2022-02-20 07:41:27.468082000 +0800
+@@ -0,0 +1,112 @@
++--- a/drivers/firmware/qcom_scm-legacy.c
+++++ b/drivers/firmware/qcom_scm-legacy.c
++@@ -13,6 +13,9 @@
++ #include <linux/arm-smccc.h>
++ #include <linux/dma-mapping.h>
++ 
+++#include <asm/cacheflush.h>
+++#include <asm/outercache.h>
+++
++ #include "qcom_scm.h"
++ 
++ static DEFINE_MUTEX(qcom_scm_lock);
++@@ -117,6 +120,25 @@ static void __scm_legacy_do(const struct
++ 	} while (res->a0 == QCOM_SCM_INTERRUPTED);
++ }
++ 
+++static void qcom_scm_inv_range(unsigned long start, unsigned long end)
+++{
+++	u32 cacheline_size, ctr;
+++
+++	asm volatile("mrc p15, 0, %0, c0, c0, 1" : "=r" (ctr));
+++	cacheline_size = 4 << ((ctr >> 16) & 0xf);
+++
+++	start = round_down(start, cacheline_size);
+++	end = round_up(end, cacheline_size);
+++	outer_inv_range(start, end);
+++	while (start < end) {
+++		asm ("mcr p15, 0, %0, c7, c6, 1" : : "r" (start)
+++		     : "memory");
+++		start += cacheline_size;
+++	}
+++	dsb();
+++	isb();
+++}
+++
++ /**
++  * qcom_scm_call() - Sends a command to the SCM and waits for the command to
++  * finish processing.
++@@ -160,10 +182,16 @@ int scm_legacy_call(struct device *dev,
++ 
++ 	rsp = scm_legacy_command_to_response(cmd);
++ 
++-	cmd_phys = dma_map_single(dev, cmd, alloc_len, DMA_TO_DEVICE);
++-	if (dma_mapping_error(dev, cmd_phys)) {
++-		kfree(cmd);
++-		return -ENOMEM;
+++	if (dev) {
+++		cmd_phys = dma_map_single(dev, cmd, alloc_len, DMA_TO_DEVICE);
+++		if (dma_mapping_error(dev, cmd_phys)) {
+++			kfree(cmd);
+++			return -ENOMEM;
+++		}
+++	} else {
+++		cmd_phys = virt_to_phys(cmd);
+++		__cpuc_flush_dcache_area(cmd, alloc_len);
+++		outer_flush_range(cmd_phys, cmd_phys + alloc_len);
++ 	}
++ 
++ 	smc.args[0] = 1;
++@@ -179,13 +207,26 @@ int scm_legacy_call(struct device *dev,
++ 		goto out;
++ 
++ 	do {
++-		dma_sync_single_for_cpu(dev, cmd_phys + sizeof(*cmd) + cmd_len,
++-					sizeof(*rsp), DMA_FROM_DEVICE);
+++		if (dev) {
+++			dma_sync_single_for_cpu(dev, cmd_phys + sizeof(*cmd) +
+++						cmd_len, sizeof(*rsp),
+++						DMA_FROM_DEVICE);
+++		} else {
+++			unsigned long start = (uintptr_t)cmd + sizeof(*cmd) +
+++					      cmd_len;
+++			qcom_scm_inv_range(start, start + sizeof(*rsp));
+++		}
++ 	} while (!rsp->is_complete);
++ 
++-	dma_sync_single_for_cpu(dev, cmd_phys + sizeof(*cmd) + cmd_len +
++-				le32_to_cpu(rsp->buf_offset),
++-				resp_len, DMA_FROM_DEVICE);
+++	if (dev) {
+++		dma_sync_single_for_cpu(dev, cmd_phys + sizeof(*cmd) + cmd_len +
+++					le32_to_cpu(rsp->buf_offset),
+++					resp_len, DMA_FROM_DEVICE);
+++	} else {
+++		unsigned long start = (uintptr_t)cmd + sizeof(*cmd) + cmd_len +
+++				      le32_to_cpu(rsp->buf_offset);
+++		qcom_scm_inv_range(start, start + resp_len);
+++	}
++ 
++ 	if (res) {
++ 		res_buf = scm_legacy_get_response_buffer(rsp);
++@@ -193,7 +234,8 @@ int scm_legacy_call(struct device *dev,
++ 			res->result[i] = le32_to_cpu(res_buf[i]);
++ 	}
++ out:
++-	dma_unmap_single(dev, cmd_phys, alloc_len, DMA_TO_DEVICE);
+++	if (dev)
+++		dma_unmap_single(dev, cmd_phys, alloc_len, DMA_TO_DEVICE);
++ 	kfree(cmd);
++ 	return ret;
++ }
++--- a/drivers/firmware/qcom_scm.c
+++++ b/drivers/firmware/qcom_scm.c
++@@ -344,7 +344,7 @@ int qcom_scm_set_cold_boot_addr(void *en
++ 	desc.args[0] = flags;
++ 	desc.args[1] = virt_to_phys(entry);
++ 
++-	return qcom_scm_call_atomic(__scm ? __scm->dev : NULL, &desc, NULL);
+++	return qcom_scm_call(__scm ? __scm->dev : NULL, &desc, NULL);
++ }
++ EXPORT_SYMBOL(qcom_scm_set_cold_boot_addr);
++ 
 diff -uNr a/patches-5.10/901-arm-boot-add-dts-files.patch b/patches-5.10/901-arm-boot-add-dts-files.patch
---- a/patches-5.10/901-arm-boot-add-dts-files.patch	2022-02-20 21:16:21.646795984 +0800
+--- a/patches-5.10/901-arm-boot-add-dts-files.patch	2022-02-21 08:28:55.888718195 +0800
 +++ b/patches-5.10/901-arm-boot-add-dts-files.patch	2022-02-20 07:41:27.468082000 +0800
 @@ -10,7 +10,7 @@
  
@@ -704,3 +866,19 @@ diff -uNr a/patches-5.10/901-arm-boot-add-dts-files.patch b/patches-5.10/901-arm
  +	qcom-ipq4019-wpj419.dtb \
  +	qcom-ipq4019-wtr-m2133hp.dtb \
  +	qcom-ipq4028-wpj428.dtb \
+diff -uNr a/patches-5.10/997-device_tree_cmdline.patch b/patches-5.10/997-device_tree_cmdline.patch
+--- a/patches-5.10/997-device_tree_cmdline.patch	1970-01-01 08:00:00.000000000 +0800
++++ b/patches-5.10/997-device_tree_cmdline.patch	2022-02-20 07:41:27.468082000 +0800
+@@ -0,0 +1,12 @@
++--- a/drivers/of/fdt.c
+++++ b/drivers/of/fdt.c
++@@ -1055,6 +1055,9 @@ int __init early_init_dt_scan_chosen(uns
++ 	p = of_get_flat_dt_prop(node, "bootargs", &l);
++ 	if (p != NULL && l > 0)
++ 		strlcpy(data, p, min(l, COMMAND_LINE_SIZE));
+++	p = of_get_flat_dt_prop(node, "bootargs-append", &l);
+++	if (p != NULL && l > 0)
+++		strlcat(data, p, min_t(int, strlen(data) + (int)l, COMMAND_LINE_SIZE));
++ 
++ 	/*
++ 	 * CONFIG_CMDLINE is meant to be a default in case nothing else
