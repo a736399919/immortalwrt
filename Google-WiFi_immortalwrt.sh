@@ -6,27 +6,28 @@
 #   Blog: https://p3terx.com
 #=================================================
 #克隆源码
-#git clone -b gale --single-branch https://github.com/computersforpeace/openwrt openwrt
-git clone -b master --single-branch https://github.com/immortalwrt/immortalwrt openwrt
-
-#rm -rf openwrt/target/linux/generic
-#svn checkout https://github.com/computersforpeace/openwrt/branches/gale/target/linux/generic openwrt/target/linux/generic
-
+git clone -b gale --single-branch https://github.com/computersforpeace/openwrt openwrt
 [ -e files ] && mv files openwrt/files
-
-
+rm -rf openwrt/feeds.conf.default
+wget -O openwrt/feeds.conf.default https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/feeds.conf.default
 cd openwrt
-
 ./scripts/feeds clean
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
+svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/emortal package/emortal
 #添加主题
-git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon-2.2.9
+#svn checkout https://github.com/immortalwrt/luci/trunk/themes/luci-theme-argon package/luci-theme-argon
+#svn checkout https://github.com/immortalwrt/luci/trunk/themes/luci-theme-material package/luci-theme-material
+#git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon-2.2.9
+
 #添加自定义插件
+svn checkout https://github.com/Hyy2001X/AutoBuild-Packages/trunk/luci-app-webd package/luci-app-webd
+svn checkout https://github.com/Hyy2001X/AutoBuild-Packages/trunk/webd package/webd
 git clone https://github.com/small-5/luci-app-adblock-plus.git package/luci-app-adblock-plus
 git clone https://github.com/ntlf9t/luci-app-easymesh package/luci-app-easymesh
 git clone https://github.com/KFERMercer/luci-app-tcpdump.git package/luci-app-tcpdump
+
 
 #修改lan口地址
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
@@ -39,14 +40,15 @@ sed -i 's/disabled=1/disabled=0/g' package/kernel/mac80211/files/lib/wifi/mac802
 #修改时区
 sed -i "s/'UTC'/'CST-8'\n        set system.@system[-1].zonename='Asia\/Shanghai'/g" package/base-files/files/bin/config_generate
 #更改主机型号，支持中文。 
-#sed -i "s/MobiPromo CM520-79F/谷歌路由器/g" target/linux/ipq40xx/files/arch/arm/boot/dts/qcom-ipq4019-cm520-79f.dts
+sed -i "s/Google WiFi (Gale)/谷歌路由器/g" target/linux/ipq40xx/files/arch/arm/boot/dts/qcom-ipq4019-wifi.dts
 
 #修改zzz-default-settings的配置
 #修改网络共享的位置
-sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/samba4.lua" package/emortal/default-settings/files/99-default-settings
-sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-samba4.json" package/emortal/default-settings/files/99-default-settings
+#sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/samba4.lua" package/emortal/default-settings/files/99-default-settings
+#sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-samba4.json" package/emortal/default-settings/files/99-default-settings
 sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/ksmbd.lua" package/emortal/default-settings/files/99-default-settings
 sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-ksmbd.json" package/emortal/default-settings/files/99-default-settings
+
 
 #修改aria2的位置
 #sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/aria2.lua" package/default-settings/files/zzz-default-settings
@@ -57,15 +59,19 @@ sed -i "/exit 0/i\sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-ksmb
 #sed -i '/exit 0/i\ln -sv /mnt/mmcblk0p1/all /srv/webd/web/SD卡' package/default-settings/files/zzz-default-settings
 #sed -i '/exit 0/i\chmod 775 /usr/bin/webd\n' package/default-settings/files/zzz-default-settings
 
-#修改banner
-#mv -f ../immortalwrt/Google_immortalwrt.default .config
-mv -f ../immortalwrt/Google_immortalwrt*.config .config
+#config
+mv -f ../G-DOCK/Google_gale*.config .config
 
-wget -O scripts/gen_image_vboot.sh https://raw.githubusercontent.com/computersforpeace/openwrt/gale/scripts/gen_image_vboot.sh
-chmod +x scripts/gen_image_vboot.sh
-cd target/linux/ipq40xx
-wget https://raw.githubusercontent.com/a736399919/immortalwrt/openwrt-18.06/immortalwrt/gale.patch
-patch -p1 < gale.patch
+rm -rf package/kernel/mac80211
+rm -rf package/network 
+rm -rf package/system
+svn checkout https://github.com/immortalwrt/luci/trunk/package/kernel/mac80211 package/kernel/mac80211
+svn checkout https://github.com/immortalwrt/luci/trunk/package/kernel/shortcut-fe package/kernel/shortcut-fe
+svn checkout https://github.com/immortalwrt/luci/trunk/package/network package/network 
+svn checkout https://github.com/immortalwrt/luci/trunk/package/system package/system
 
-cd ../../../
-touch target/linux/*/Makefile
+wget -O target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch
+
+wget -O target/linux/generic/hack-5.10/953-net-patch-linux-kernel-to-support-shortcut-fe.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/generic/hack-5.10/953-net-patch-linux-kernel-to-support-shortcut-fe.patch
+
+wget -O target/linux/ipq40xx/patches-5.10/999-ipq40xx-unlock-cpu-frequency.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/ipq40xx/patches-5.10/999-ipq40xx-unlock-cpu-frequency.patch
