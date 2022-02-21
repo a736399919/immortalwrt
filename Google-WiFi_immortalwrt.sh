@@ -71,6 +71,8 @@ svn checkout https://github.com/Lienol/openwrt/branches/main/package/kernel/shor
 svn checkout https://github.com/Lienol/openwrt/branches/main/package/network package/network 
 svn checkout https://github.com/Lienol/openwrt/branches/main/package/system package/system
 
+wget -O target/linux/generic/hack-5.10/601-netfilter-export-udp_get_timeouts-function.patch https://raw.githubusercontent.com/Lienol/openwrt/main/target/linux/generic/hack-5.10/601-netfilter-export-udp_get_timeouts-function.patch
+
 wget -O target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch
 
 wget -O target/linux/generic/hack-5.10/953-net-patch-linux-kernel-to-support-shortcut-fe.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/generic/hack-5.10/953-net-patch-linux-kernel-to-support-shortcut-fe.patch
