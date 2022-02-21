@@ -866,19 +866,3 @@ diff -uNr a/patches-5.10/901-arm-boot-add-dts-files.patch b/patches-5.10/901-arm
  +	qcom-ipq4019-wpj419.dtb \
  +	qcom-ipq4019-wtr-m2133hp.dtb \
  +	qcom-ipq4028-wpj428.dtb \
-diff -uNr a/patches-5.10/997-device_tree_cmdline.patch b/patches-5.10/997-device_tree_cmdline.patch
---- a/patches-5.10/997-device_tree_cmdline.patch	1970-01-01 08:00:00.000000000 +0800
-+++ b/patches-5.10/997-device_tree_cmdline.patch	2022-02-20 07:41:27.468082000 +0800
-@@ -0,0 +1,12 @@
-+--- a/drivers/of/fdt.c
-++++ b/drivers/of/fdt.c
-+@@ -1055,6 +1055,9 @@ int __init early_init_dt_scan_chosen(uns
-+ 	p = of_get_flat_dt_prop(node, "bootargs", &l);
-+ 	if (p != NULL && l > 0)
-+ 		strlcpy(data, p, min(l, COMMAND_LINE_SIZE));
-++	p = of_get_flat_dt_prop(node, "bootargs-append", &l);
-++	if (p != NULL && l > 0)
-++		strlcat(data, p, min_t(int, strlen(data) + (int)l, COMMAND_LINE_SIZE));
-+ 
-+ 	/*
-+ 	 * CONFIG_CMDLINE is meant to be a default in case nothing else
