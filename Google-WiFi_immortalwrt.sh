@@ -65,10 +65,11 @@ mv -f ../G-DOCK/gale_immortalwrt*.config .config
 rm -rf package/kernel/mac80211
 rm -rf package/network 
 rm -rf package/system
-svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/kernel/mac80211 package/kernel/mac80211
-svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/kernel/shortcut-fe package/kernel/shortcut-fe
-svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/network package/network 
-svn checkout https://github.com/immortalwrt/immortalwrt/trunk/package/system package/system
+
+svn checkout https://github.com/Lienol/openwrt/branches/main/package/kernel/mac80211 package/kernel/mac80211
+svn checkout https://github.com/Lienol/openwrt/branches/main/package/kernel/shortcut-fe package/kernel/shortcut-fe
+svn checkout https://github.com/Lienol/openwrt/branches/main/package/network package/network 
+svn checkout https://github.com/Lienol/openwrt/branches/main/package/system package/system
 
 wget -O target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/generic/hack-5.10/952-net-conntrack-events-support-multiple-registrant.patch
 
